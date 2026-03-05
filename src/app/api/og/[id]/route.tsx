@@ -397,8 +397,10 @@ export async function GET(
                         position: 'relative',
                     }}
                 >
-                    {/* Mapbox Background Injector */}
-                    {mapBackgroundElement}
+                    {/* Mapbox Background Injector (Positioned Absolutely) */}
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0, display: 'flex' }}>
+                        {mapBackgroundElement}
+                    </div>
 
                     {/* Top Overlay (Header details + Distance/Time/Elevation) */}
                     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', zIndex: 10 }}>

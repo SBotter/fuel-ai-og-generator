@@ -106,7 +106,7 @@ export async function GET(
 
         if (mapboxToken && polyline && polyline.trim().length > 0) {
             const encoded = encodeURIComponent(polyline)
-            const mapUrl = `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/path-5+f97316(${encoded})/auto/1080x1200@2x?padding=100&access_token=${mapboxToken}`
+            const mapUrl = `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/path-3+ffffff-0.4(${encoded})/auto/1080x1200@2x?padding=100&access_token=${mapboxToken}`
 
             try {
                 const mapRes = await fetch(mapUrl)
@@ -402,7 +402,7 @@ export async function GET(
                     }}
                 >
                     {/* Mapbox Background Injector (Positioned Absolutely) */}
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0, display: 'flex' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0, display: 'flex', opacity: 0.5, mixBlendMode: 'overlay' }}>
                         {mapBackgroundElement}
                     </div>
 

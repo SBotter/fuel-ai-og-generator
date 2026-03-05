@@ -395,7 +395,7 @@ export async function GET(
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         color: 'white',
-                        background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.8))',
+                        background: 'linear-gradient(to bottom, #111, rgba(0,0,0,0.8))',
                         padding: '140px 60px 80px 60px',
                         fontFamily: 'sans-serif',
                         position: 'relative',

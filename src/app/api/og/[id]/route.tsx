@@ -28,7 +28,11 @@ export async function GET(
 
         // 1. Construct the data string using ONLY the known allowed parameters
         // This prevents extra URL params (like Vercel toolbar or tracking) from breaking the signature
-        const allowedKeys = ['design', 'title', 'energy', 'glycogen', 'carbs', 'protein', 'velocity', 'distance', 'timeFormatted', 'elevation', 'polyline']
+        const allowedKeys = [
+            'design', 'title', 'energy', 'glycogen', 'carbs', 'protein',
+            'velocity', 'distance', 'timeFormatted', 'elevation', 'polyline',
+            'avgSpeed', 'maxSpeed', 'avgHr', 'maxHr', 'intensityScore', 'loadScore'
+        ]
         const paramsToSign = new URLSearchParams()
 
         allowedKeys.forEach(key => {

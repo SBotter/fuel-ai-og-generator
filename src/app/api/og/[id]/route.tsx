@@ -9,6 +9,56 @@ export async function GET(
     const url = new URL(request.url)
     const design = url.searchParams.get('design') || 'primary'
 
+    // ==========================================
+    // SECURITY: HMAC Signature Verification
+    // ==========================================
+    const secretKey = process.env.OG_SECRET_KEY
+
+    // In production, require the secret key to be set
+    if (!secretKey && process.env.NODE_ENV === 'production') {
+        return new Response('Unauthorized: Server is missing OG_SECRET_KEY', { status: 401 })
+    }
+
+    if (secretKey) {
+        const providedSignature = url.searchParams.get('sig')
+
+        if (!providedSignature) {
+            return new Response('Unauthorized: Missing signature', { status: 401 })
+        }
+
+        // 1. Remove the 'sig' parameter to construct the original data string
+        const paramsToSign = new URLSearchParams(url.searchParams)
+        paramsToSign.delete('sig')
+
+        // Sort parameters to ensure consistent signing order regardless of URL construction
+        paramsToSign.sort()
+        const dataToSign = paramsToSign.toString()
+
+        // 2. Generate expected HMAC using Web Crypto API (supported in Edge Runtime)
+        const encoder = new TextEncoder()
+        const key = await crypto.subtle.importKey(
+            'raw',
+            encoder.encode(secretKey),
+            { name: 'HMAC', hash: 'SHA-256' },
+            false,
+            ['sign']
+        )
+        const signatureBuffer = await crypto.subtle.sign(
+            'HMAC',
+            key,
+            encoder.encode(dataToSign)
+        )
+
+        // Convert ArrayBuffer to Hex String
+        const signatureArray = Array.from(new Uint8Array(signatureBuffer))
+        const expectedSignature = signatureArray.map(b => b.toString(16).padStart(2, '0')).join('')
+
+        // 3. Compare signatures
+        if (providedSignature !== expectedSignature) {
+            return new Response('Unauthorized: Invalid signature', { status: 401 })
+        }
+    }
+
     try {
         // --- Extract State from URL Query Parameters ---
         // This makes the microservice a deterministic "dumb renderer"

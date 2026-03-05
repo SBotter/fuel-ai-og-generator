@@ -100,35 +100,61 @@ export async function GET(
         let mapBackgroundElement = null
         const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
 
-        if (mapboxToken && polyline) {
+        if (mapboxToken && polyline && polyline.trim().length > 0) {
             const encoded = encodeURIComponent(polyline)
-            // Mapbox API max dimension is 1280px. We request a 1080x1200 map overlaid on the 1080x1920 canvas.
             const mapUrl = `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/path-5+f97316(${encoded})/auto/1080x1200@2x?padding=100&access_token=${mapboxToken}`
 
             try {
                 const mapRes = await fetch(mapUrl)
                 if (mapRes.ok) {
-                    const arrayBuffer = await mapRes.arrayBuffer()
-
-                    let binary = ''
-                    const bytes = new Uint8Array(arrayBuffer)
-                    for (let i = 0; i < bytes.byteLength; i++) {
-                        binary += String.fromCharCode(bytes[i])
-                    }
-                    const base64 = btoa(binary)
-
+                    const mapBuffer = await mapRes.arrayBuffer()
+                    const mapBase64 = Buffer.from(mapBuffer).toString('base64')
                     mapBackgroundElement = (
                         <img
-                            src={`data:image/png;base64,${base64}`}
-                            style={{ position: 'absolute', top: 0, left: 0, width: '1080px', height: '1920px', objectFit: 'cover' }}
+                            src={`data:image/png;base64,${mapBase64}`}
+                            style={{
+                                width: '1080px',
+                                height: '1200px', // Covers the top part of the vertical poster
+                                objectFit: 'cover'
+                            }}
                         />
                     )
-                } else {
-                    console.error("Mapbox error:", await mapRes.text())
                 }
             } catch (err) {
                 console.error("Mapbox fetch failed silently:", err)
             }
+        }
+
+        // Final Fallback if map fails or no polyline
+        if (!mapBackgroundElement) {
+            mapBackgroundElement = (
+                <div style={{
+                    display: 'flex',
+                    width: '1080px',
+                    height: '1100px',
+                    background: 'linear-gradient(45deg, #111111 0%, #222222 100%)',
+                    position: 'relative'
+                }}>
+                    <div style={{
+                        position: 'absolute',
+                        top: '200px',
+                        left: '140px',
+                        width: '800px',
+                        height: '800px',
+                        borderRadius: '50%',
+                        background: 'radial-gradient(circle, rgba(252,76,2,0.1) 0%, transparent 80%)',
+                    }} />
+                    <div style={{
+                        position: 'absolute',
+                        top: '500px',
+                        right: '100px',
+                        width: '600px',
+                        height: '600px',
+                        borderRadius: '50%',
+                        background: 'radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%)',
+                    }} />
+                </div>
+            )
         }
 
         // 4. Fetch the rendered logo.png from the same origin to inject as a base64 image

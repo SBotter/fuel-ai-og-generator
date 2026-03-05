@@ -26,9 +26,21 @@ export async function GET(
             return new Response('Unauthorized: Missing signature', { status: 401 })
         }
 
-        // 1. Remove the 'sig' parameter to construct the original data string
-        const paramsToSign = new URLSearchParams(url.searchParams)
-        paramsToSign.delete('sig')
+        // 1. Construct the data string using ONLY the known allowed parameters
+        // This prevents extra URL params (like Vercel toolbar or tracking) from breaking the signature
+        const allowedKeys = [
+            'design', 'title', 'energy', 'glycogen', 'carbs', 'protein',
+            'velocity', 'distance', 'timeFormatted', 'elevation', 'polyline',
+            'avgSpeed', 'maxSpeed', 'avgHr', 'maxHr', 'intensityScore', 'loadScore'
+        ]
+        const paramsToSign = new URLSearchParams()
+
+        allowedKeys.forEach(key => {
+            const val = url.searchParams.get(key)
+            if (val !== null) {
+                paramsToSign.append(key, val)
+            }
+        })
 
         // Sort parameters to ensure consistent signing order regardless of URL construction
         paramsToSign.sort()
@@ -92,35 +104,61 @@ export async function GET(
         let mapBackgroundElement = null
         const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
 
-        if (mapboxToken && polyline) {
+        if (mapboxToken && polyline && polyline.trim().length > 0) {
             const encoded = encodeURIComponent(polyline)
-            // Mapbox API max dimension is 1280px. We request a 1080x1200 map overlaid on the 1080x1920 canvas.
-            const mapUrl = `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/path-5+f97316(${encoded})/auto/1080x1200@2x?padding=100&access_token=${mapboxToken}`
+            const mapUrl = `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/path-3+ffffff-0.4(${encoded})/auto/1080x1200@2x?padding=100&access_token=${mapboxToken}`
 
             try {
                 const mapRes = await fetch(mapUrl)
                 if (mapRes.ok) {
-                    const arrayBuffer = await mapRes.arrayBuffer()
-
-                    let binary = ''
-                    const bytes = new Uint8Array(arrayBuffer)
-                    for (let i = 0; i < bytes.byteLength; i++) {
-                        binary += String.fromCharCode(bytes[i])
-                    }
-                    const base64 = btoa(binary)
-
+                    const mapBuffer = await mapRes.arrayBuffer()
+                    const mapBase64 = Buffer.from(mapBuffer).toString('base64')
                     mapBackgroundElement = (
                         <img
-                            src={`data:image/png;base64,${base64}`}
-                            style={{ position: 'absolute', top: 0, left: 0, width: '1080px', height: '1920px', objectFit: 'cover' }}
+                            src={`data:image/png;base64,${mapBase64}`}
+                            style={{
+                                width: '1080px',
+                                height: '1200px', // Covers the top part of the vertical poster
+                                objectFit: 'cover'
+                            }}
                         />
                     )
-                } else {
-                    console.error("Mapbox error:", await mapRes.text())
                 }
             } catch (err) {
                 console.error("Mapbox fetch failed silently:", err)
             }
+        }
+
+        // Final Fallback if map fails or no polyline
+        if (!mapBackgroundElement) {
+            mapBackgroundElement = (
+                <div style={{
+                    display: 'flex',
+                    width: '1080px',
+                    height: '1100px',
+                    background: 'linear-gradient(45deg, #111111 0%, #222222 100%)',
+                    position: 'relative'
+                }}>
+                    <div style={{
+                        position: 'absolute',
+                        top: '200px',
+                        left: '140px',
+                        width: '800px',
+                        height: '800px',
+                        borderRadius: '50%',
+                        background: 'radial-gradient(circle, rgba(252,76,2,0.1) 0%, transparent 80%)',
+                    }} />
+                    <div style={{
+                        position: 'absolute',
+                        top: '500px',
+                        right: '100px',
+                        width: '600px',
+                        height: '600px',
+                        borderRadius: '50%',
+                        background: 'radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%)',
+                    }} />
+                </div>
+            )
         }
 
         // 4. Fetch the rendered logo.png from the same origin to inject as a base64 image
@@ -337,6 +375,10 @@ export async function GET(
                 {
                     width: 1080,
                     height: 1920,
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                        'Content-Disposition': 'attachment; filename="prorefuel_poster.png"'
+                    }
                 }
             )
         }
@@ -353,14 +395,16 @@ export async function GET(
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         color: 'white',
-                        background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.8))',
+                        background: 'linear-gradient(to bottom, #111, rgba(0,0,0,0.8))',
                         padding: '140px 60px 80px 60px',
                         fontFamily: 'sans-serif',
                         position: 'relative',
                     }}
                 >
-                    {/* Mapbox Background Injector */}
-                    {mapBackgroundElement}
+                    {/* Mapbox Background Injector (Positioned Absolutely) */}
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 0, display: 'flex', opacity: 0.5, mixBlendMode: 'overlay' }}>
+                        {mapBackgroundElement}
+                    </div>
 
                     {/* Top Overlay (Header details + Distance/Time/Elevation) */}
                     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', zIndex: 10 }}>
@@ -451,6 +495,10 @@ export async function GET(
             {
                 width: 1080,
                 height: 1920,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Content-Disposition': 'attachment; filename="prorefuel_primary.png"'
+                }
             }
         )
     } catch (e: any) {

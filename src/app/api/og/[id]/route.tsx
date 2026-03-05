@@ -26,9 +26,17 @@ export async function GET(
             return new Response('Unauthorized: Missing signature', { status: 401 })
         }
 
-        // 1. Remove the 'sig' parameter to construct the original data string
-        const paramsToSign = new URLSearchParams(url.searchParams)
-        paramsToSign.delete('sig')
+        // 1. Construct the data string using ONLY the known allowed parameters
+        // This prevents extra URL params (like Vercel toolbar or tracking) from breaking the signature
+        const allowedKeys = ['design', 'title', 'energy', 'glycogen', 'carbs', 'protein', 'velocity', 'distance', 'timeFormatted', 'elevation', 'polyline']
+        const paramsToSign = new URLSearchParams()
+
+        allowedKeys.forEach(key => {
+            const val = url.searchParams.get(key)
+            if (val !== null) {
+                paramsToSign.append(key, val)
+            }
+        })
 
         // Sort parameters to ensure consistent signing order regardless of URL construction
         paramsToSign.sort()

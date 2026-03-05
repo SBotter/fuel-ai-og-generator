@@ -375,6 +375,10 @@ export async function GET(
                 {
                     width: 1080,
                     height: 1920,
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                        'Content-Disposition': 'attachment; filename="prorefuel_poster.png"'
+                    }
                 }
             )
         }
@@ -491,6 +495,10 @@ export async function GET(
             {
                 width: 1080,
                 height: 1920,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Content-Disposition': 'attachment; filename="prorefuel_primary.png"'
+                }
             }
         )
     } catch (e: any) {

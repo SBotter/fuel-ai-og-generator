@@ -1,0 +1,9 @@
+<svg width="500" height="120" viewBox="0 0 500 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Organic "Brush-Stroke" Mountain Path -->
+  <path d="M28 95 Q 190 94, 358 95 C 370 95, 372 70, 385 75 C 395 79, 396 90, 402 90 C 410 90, 420 12, 432 15 C 445 18, 455 105, 475 108" stroke="#FC4C02" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- "ProRefuel" as One Word using Geist font (Bold Italic) -->
+  <text x="25" y="82" font-family="'Geist', sans-serif" font-weight="900" font-style="italic" font-size="64" style="letter-spacing: -2.5px;">
+    <tspan fill="#FC4C02">Pro</tspan><tspan fill="white">Refuel</tspan>
+  </text>
+</svg>
